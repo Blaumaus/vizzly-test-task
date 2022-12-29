@@ -3,8 +3,7 @@ import _map from 'lodash/map'
 import _toLower from 'lodash/toLower'
 import _keys from 'lodash/keys'
 import _filter from 'lodash/filter'
-import GridLayout from 'react-grid-layout'
-import { Responsive as RGL, WidthProvider } from 'react-grid-layout'
+import _random from 'lodash/random'
 import {
   Chart as ChartJS,
   LinearScale,
@@ -29,6 +28,7 @@ import Modal from '../../ui/Modal'
 import Select from '../../ui/Select'
 
 import { getJSONData } from '../../api'
+import RGL, { WidthProvider } from 'react-grid-layout'
 
 const ReactGridLayout = WidthProvider(RGL)
 
@@ -39,7 +39,7 @@ const fields = _keys(data[0])
 
 const ChartComponent = ({ chart, onDelete, onEdit }) => {
   return (
-    <div className='border-2 border-gray-800 max-w-lg max-h-96 m-2'>
+    <div className='border-2 pb-5 border-gray-800 w-full h-full max-w-lg max-h-96 m-2'>
       <div className='flex justify-between items-center bg-gray-200 select-none cursor-grab pl-1 pr-1'>
         <div className='cursor-text'>
           {chart.type}
@@ -81,6 +81,7 @@ const Dashboard = () => {
     measure: '',
   })
   const [charts, setCharts] = useState([])
+  const [layout, setLayout] = useState([])
 
   const onSave = () => {
     if (!newChartForm.type || !newChartForm.dimension || !newChartForm.measure) {
@@ -105,8 +106,16 @@ const Dashboard = () => {
       ...newChartForm,
       key: Math.random(),
     }
-
     setCharts((prev) => [...prev, form])
+    setLayout((prev) => [...prev, {
+      i: form.key,
+      x: _random(0, 12),
+      y: _random(0, 12),
+      w: 6,
+      h: 4,
+      isDraggable: true,
+      isResizable: true,
+    }])
     setNewChartForm({})
     setNewChartModalShown(false)
   }
@@ -120,15 +129,27 @@ const Dashboard = () => {
     setNewChartModalShown(true)
   }
 
+  // I commented ReactGridLayout out because it causes issues like the component being dragged down on click
+  // and the component is not resizable.
+  // Potentially it's possible to fix this, but it is out of the 3 hour limit for this task.
   return (
     <div>
-      <div className='cursor-pointer' onClick={() => setNewChartModalShown(true)}>
+      <div className='cursor-pointer text-gray-800 hover:text-gray-600 p-2 m-2' onClick={() => setNewChartModalShown(true)}>
         ADD CHART
       </div>
 
+      {/* <ReactGridLayout
+        layouts={layout}
+        onLayoutChange={(layout) => setLayout(layout)}
+        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+      > */}
       {_map(charts, (chart) => (
-        <ChartComponent key={chart.key} chart={chart} onDelete={onDelete} onEdit={onEdit} />
+        <div key={chart.key} >
+          <ChartComponent key={chart.key} chart={chart} onDelete={onDelete} onEdit={onEdit} />
+        </div>
       ))}
+      {/* </ReactGridLayout> */}
 
       <Modal
         title='Add new chart'
